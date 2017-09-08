@@ -20,6 +20,7 @@
 */
 
 
+#include "genericfuncs.h"
 #include "tabbar.h"
 #include "mainwindow.h"
 #include "skin.h"
@@ -404,32 +405,64 @@ void TabBar::resizeEvent(QResizeEvent* event)
 void TabBar::paintEvent(QPaintEvent*)
 {
     QPainter painter(this);
-    painter.setPen(m_skin->tabBarTextColor());
 
-    int x = m_skin->tabBarPosition().x();
-    int y = m_skin->tabBarPosition().y();
+    const int x_start = m_skin->tabBarPosition().x();
+    const int y_start = m_skin->tabBarPosition().y();
+    const int x_end   = m_closeTabButton->x();
     m_tabWidths.clear();
 
-    QRect tabsClipRect(x, y, m_closeTabButton->x() - x, height() - y);
+    QRect tabsClipRect(x_start, y_start, x_end - x_start, height() - y_start);
     painter.setClipRect(tabsClipRect);
 
-    for (int index = 0; index < m_tabs.count(); ++index)
-    {
-        x = drawButton(x, y, index, painter);
-        m_tabWidths << x;
+    // Draw all of the buttons in an off screen pixmap to allow scrolling.
+    // TODO: Implement a scrollbar as well for scrolling the buttonBar.
+    m_ButtonBar = drawButtonBar();
+
+    // Get the active tab and its start/end x values
+    int activeTabIndex = m_tabs.indexOf(m_selectedSessionId);
+    int activeTabStartsAtX = activeTabIndex > 0 ? m_tabWidths.at(activeTabIndex - 1) : x_start;
+    int activeTabEndsAtX = m_tabWidths.at(activeTabIndex);
+
+
+    if (m_ButtonBar.width() < m_closeTabButton->geometry().x() - x_start)
+        // If the button bar can fit in the tabbar, then do not scroll at all
+        m_scrollButtonBar_x = 0;
+    else {
+        if(activeTabStartsAtX + m_scrollButtonBar_x < x_start)
+            // If the selected tab is overflowing to the right, scroll
+            // the buttonBar pixmap leftwards.
+            m_scrollButtonBar_x = -(activeTabStartsAtX - x_start);
+        else if (activeTabEndsAtX + m_scrollButtonBar_x > x_end)
+            // If the selected tab is overflowing to the left, scroll
+            // the buttonBar pixmap rightwards.
+            m_scrollButtonBar_x = x_end - activeTabEndsAtX;
+        else if (m_ButtonBar.width() + m_scrollButtonBar_x < x_end)
+            // When exiting from sessions, if the buttonBar is scrolled and the active
+            // tab already visible, the above two conditions will not change the
+            // value of m_scrollButtonBar_x, and there will be empty space to the right
+            // side of the tabbar. This condition will push the buttonBar to the right
+            // to fill up this space.
+            m_scrollButtonBar_x = x_end - x_start - m_ButtonBar.width();
     }
+
+    // Find where the bar actually ends. This is needed to draw the remaining area
+    // with the background color later.
+    int xButtonBarEnd = m_scrollButtonBar_x + x_start + m_ButtonBar.width();
+
+    // Paint the buttons on the tabbar widget.
+    painter.drawPixmap(x_start + m_scrollButtonBar_x,
+                       y_start,
+                       m_ButtonBar);
 
     const QPixmap& backgroundImage = m_skin->tabBarBackgroundImage();
     const QPixmap& leftCornerImage = m_skin->tabBarLeftCornerImage();
     const QPixmap& rightCornerImage = m_skin->tabBarRightCornerImage();
 
-    x = x > tabsClipRect.right() ? tabsClipRect.right() + 1 : x;
-
     QRegion backgroundClipRegion(rect());
     backgroundClipRegion = backgroundClipRegion.subtracted(m_newTabButton->geometry());
     backgroundClipRegion = backgroundClipRegion.subtracted(m_closeTabButton->geometry());
-    QRect tabsRect(m_skin->tabBarPosition().x(), y, x - m_skin->tabBarPosition().x(),
-        height() - m_skin->tabBarPosition().y());
+
+    QRect tabsRect(x_start, y_start, xButtonBarEnd - x_start, height() - y_start);
     backgroundClipRegion = backgroundClipRegion.subtracted(tabsRect);
     painter.setClipRegion(backgroundClipRegion);
 
@@ -448,38 +481,48 @@ void TabBar::paintEvent(QPaintEvent*)
     painter.end();
 }
 
-int TabBar::drawButton(int x, int y, int index, QPainter& painter)
+const QPixmap TabBar::drawButtonBar()
+{
+    QPixmap buttonBar;
+    int x = m_skin->tabBarPosition().x();
+
+    m_tabWidths.clear();
+
+    for (int index = 0; index < m_tabs.count(); ++index)
+    {
+        // Draw all the buttons one by one and append them to the buttonBar.
+        // Add their right x coordinate to the m_tabWidths list.
+        QPixmap button = drawButton(index);
+        x += button.width();
+        m_tabWidths << x;
+        buttonBar = appendPixmapToPixmapHorizontally(buttonBar, button);
+    }
+
+    return buttonBar;
+}
+
+const QPixmap TabBar::drawButton(int index)
 {
     QString title;
     int sessionId;
     bool selected;
     QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
     int textWidth = 0;
+    QPixmap button;
 
     sessionId = m_tabs.at(index);
     selected = (sessionId == m_selectedSessionId);
     title = m_tabTitles[sessionId];
 
     if (selected)
-    {
-        painter.drawPixmap(x, y, m_skin->tabBarSelectedLeftCornerImage());
-        x += m_skin->tabBarSelectedLeftCornerImage().width();
-    }
+        button = appendPixmapToPixmapHorizontally(button, m_skin->tabBarSelectedLeftCornerImage());
     else if (!m_skin->tabBarUnselectedLeftCornerImage().isNull())
-    {
-        painter.drawPixmap(x, y, m_skin->tabBarUnselectedLeftCornerImage());
-        x += m_skin->tabBarUnselectedLeftCornerImage().width();
-    }
+        button = appendPixmapToPixmapHorizontally(button, m_skin->tabBarUnselectedLeftCornerImage());
     else if (index != m_tabs.indexOf(m_selectedSessionId) + 1)
-    {
-        painter.drawPixmap(x, y, m_skin->tabBarSeparatorImage());
-        x += m_skin->tabBarSeparatorImage().width();
-    }
+        button = appendPixmapToPixmapHorizontally(button, m_skin->tabBarSeparatorImage());
 
     if (selected) font.setBold(true);
     else font.setBold(false);
-
-    painter.setFont(font);
 
     QFontMetrics fontMetrics(font);
     textWidth = fontMetrics.width(title) + 10;
@@ -487,51 +530,44 @@ int TabBar::drawButton(int x, int y, int index, QPainter& painter)
     // Draw the Prevent Closing image in the tab button.
     if (m_mainWindow->sessionStack()->isSessionClosable(sessionId) == false)
     {
+        QPixmap closingImagePixmap;
         if (selected)
-            painter.drawTiledPixmap(x, y,
-                    m_skin->tabBarPreventClosingImagePosition().x() +
-                    m_skin->tabBarPreventClosingImage().width(), height(),
-                    m_skin->tabBarSelectedBackgroundImage());
+            closingImagePixmap = genHorizontallyTiledPixmap(
+                        m_skin->tabBarSelectedBackgroundImage(),
+                        m_skin->tabBarPreventClosingImagePosition().x() + m_skin->tabBarPreventClosingImage().width());
         else
-            painter.drawTiledPixmap(x, y,
-                    m_skin->tabBarPreventClosingImagePosition().x() +
-                    m_skin->tabBarPreventClosingImage().width(), height(),
-                    m_skin->tabBarUnselectedBackgroundImage());
+            closingImagePixmap = genHorizontallyTiledPixmap(
+                        m_skin->tabBarUnselectedBackgroundImage(),
+                        m_skin->tabBarPreventClosingImagePosition().x() + m_skin->tabBarPreventClosingImage().width());
 
-        painter.drawPixmap(x + m_skin->tabBarPreventClosingImagePosition().x(),
-                           m_skin->tabBarPreventClosingImagePosition().y(),
-                           m_skin->tabBarPreventClosingImage());
+        closingImagePixmap = drawPixmapOnPixmap(m_skin->tabBarPreventClosingImagePosition().x(),
+                                                m_skin->tabBarPreventClosingImagePosition().y(),
+                                                closingImagePixmap,
+                                                m_skin->tabBarPreventClosingImage());
 
-        x += m_skin->tabBarPreventClosingImagePosition().x();
-        x += m_skin->tabBarPreventClosingImage().width();
+        button = appendPixmapToPixmapHorizontally(button, closingImagePixmap);
     }
 
-    if (selected)
-        painter.drawTiledPixmap(x, y, textWidth, height(), m_skin->tabBarSelectedBackgroundImage());
-    else
-        painter.drawTiledPixmap(x, y, textWidth, height(), m_skin->tabBarUnselectedBackgroundImage());
-
-    painter.drawText(x, y, textWidth + 1, height() + 2, Qt::AlignHCenter | Qt::AlignVCenter, title);
-
-    x += textWidth;
-
-    if (selected)
     {
-        painter.drawPixmap(x, m_skin->tabBarPosition().y(), m_skin->tabBarSelectedRightCornerImage());
-        x += m_skin->tabBarSelectedRightCornerImage().width();
+        QPixmap textPixmap;
+
+        if (selected)
+            textPixmap = genHorizontallyTiledPixmap(m_skin->tabBarSelectedBackgroundImage(), textWidth);
+        else
+            textPixmap = genHorizontallyTiledPixmap(m_skin->tabBarUnselectedBackgroundImage(), textWidth);
+
+        textPixmap = drawTextOnPixmap(0, 0, textWidth + 1, height() + 2, Qt::AlignHCenter | Qt::AlignVCenter, font, m_skin->tabBarTextColor(), title, textPixmap);
+        button = appendPixmapToPixmapHorizontally(button, textPixmap);
     }
+
+    if (selected)
+        button = appendPixmapToPixmapHorizontally(button, m_skin->tabBarSelectedRightCornerImage());
     else if (!m_skin->tabBarUnselectedRightCornerImage().isNull())
-    {
-        painter.drawPixmap(x, m_skin->tabBarPosition().y(), m_skin->tabBarUnselectedRightCornerImage());
-        x += m_skin->tabBarUnselectedRightCornerImage().width();
-    }
+        button = appendPixmapToPixmapHorizontally(button, m_skin->tabBarUnselectedRightCornerImage());
     else if (index != m_tabs.indexOf(m_selectedSessionId) - 1)
-    {
-        painter.drawPixmap(x, m_skin->tabBarPosition().y(), m_skin->tabBarSeparatorImage());
-        x += m_skin->tabBarSeparatorImage().width();
-    }
+        button = appendPixmapToPixmapHorizontally(button, m_skin->tabBarSeparatorImage());
 
-    return x;
+    return button;
 }
 
 int TabBar::tabAt(int x)
@@ -976,7 +1012,6 @@ void TabBar::startDrag(int index)
 
     int x = index ? m_tabWidths.at(index - 1) : m_skin->tabBarPosition().x();
     int tabWidth = m_tabWidths.at(index) - x;
-    QString title = tabTitle(sessionId);
 
     QPixmap tab(tabWidth, height());
     QColor fillColor(Settings::backgroundColor());
@@ -987,10 +1022,7 @@ void TabBar::startDrag(int index)
     tab.fill(fillColor);
 
     QPainter painter(&tab);
-    painter.initFrom(this);
-    painter.setPen(m_skin->tabBarTextColor());
-
-    drawButton(0, 0, index, painter);
+    painter.drawPixmap(0, 0, drawButton(index));
     painter.end();
 
     QMimeData* mimeData = new QMimeData;

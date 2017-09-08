@@ -1,6 +1,7 @@
 configure_file(config-yakuake.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-yakuake.h)
 
 set(yakuake_SRCS
+    genericfuncs.cpp
     main.cpp
     mainwindow.cpp
     skin.cpp

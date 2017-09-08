@@ -122,7 +122,8 @@ class TabBar : public QWidget
         void updateToggleMonitorSilenceMenu(int sessionId = -1);
         void updateToggleMonitorActivityMenu(int sessionId = -1);
 
-        int drawButton(int x, int y, int index, QPainter& painter);
+        const QPixmap drawButtonBar();
+        const QPixmap drawButton(int index);
 
         void startDrag(int index);
         void drawDropIndicator(int index, bool disabled = false);
@@ -134,6 +135,9 @@ class TabBar : public QWidget
 
         QToolButton* m_newTabButton;
         QPushButton* m_closeTabButton;
+
+        QPixmap m_ButtonBar;
+        int m_scrollButtonBar_x = 0;
 
         QMenu* m_tabContextMenu;
         QMenu* m_toggleKeyboardInputMenu;
