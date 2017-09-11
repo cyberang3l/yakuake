@@ -57,6 +57,10 @@ bool Skin::load(const QString& name, bool kns)
     KConfig titleConfig(titlePath, KConfig::SimpleConfig);
     KConfig tabConfig(tabPath, KConfig::SimpleConfig);
 
+    QStringList acceptedScrollButtonLayouts = QStringList() << QStringLiteral("leftRight")
+                                                            << QStringLiteral("bothLeft")
+                                                            << QStringLiteral("bothRight");
+
 
     KConfigGroup border = titleConfig.group("Border");
 
@@ -139,6 +143,10 @@ bool Skin::load(const QString& name, bool kns)
     m_tabBarPreventClosingImagePosition.setX(tabBar.readEntry("prevent_closing_image_x", 0));
     m_tabBarPreventClosingImagePosition.setY(tabBar.readEntry("prevent_closing_image_y", 0));
 
+    m_tabBarScrollButtonsLayout = tabBar.readEntry("leftright_button_layout", "bothLeft");
+    if (!acceptedScrollButtonLayouts.contains(m_tabBarScrollButtonsLayout))
+        m_tabBarScrollButtonsLayout = QStringLiteral("bothLeft");
+
 
     KConfigGroup tabBarBackground = tabConfig.group("Background");
 
@@ -165,6 +173,27 @@ bool Skin::load(const QString& name, bool kns)
     m_tabBarCloseTabButtonStyleSheet = buttonStyleSheet(tabDir + tabBarCloseTabButton.readEntry("up_image", ""),
                                                         tabDir + tabBarCloseTabButton.readEntry("over_image", ""),
                                                         tabDir + tabBarCloseTabButton.readEntry("down_image", ""));
+
+
+    KConfigGroup tabBarLeftButton = tabConfig.group("LeftButton");
+
+    m_tabBarLeftButtonPosition.setX(tabBarLeftButton.readEntry("x", 0));
+    m_tabBarLeftButtonPosition.setY(tabBarLeftButton.readEntry("y", 0));
+
+    m_tabBarLeftButtonStyleSheet = buttonStyleSheet(tabDir + tabBarLeftButton.readEntry("up_image", ""),
+                                                    tabDir + tabBarLeftButton.readEntry("over_image", ""),
+                                                    tabDir + tabBarLeftButton.readEntry("down_image", ""));
+
+
+    KConfigGroup tabBarRightButton = tabConfig.group("RightButton");
+
+    m_tabBarRightButtonPosition.setX(tabBarRightButton.readEntry("x", 0));
+    m_tabBarRightButtonPosition.setY(tabBarRightButton.readEntry("y", 0));
+
+    m_tabBarRightButtonStyleSheet = buttonStyleSheet(tabDir + tabBarRightButton.readEntry("up_image", ""),
+                                                    tabDir + tabBarRightButton.readEntry("over_image", ""),
+                                                    tabDir + tabBarRightButton.readEntry("down_image", ""));
+
 
     if (m_tabBarPreventClosingImage.isNull())
         updateTabBarPreventClosingImageCache();

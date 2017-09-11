@@ -135,6 +135,8 @@ class TabBar : public QWidget
 
         QToolButton* m_newTabButton;
         QPushButton* m_closeTabButton;
+        QPushButton* m_selectNextTab;
+        QPushButton* m_selectPreviousTab;
 
         QPixmap m_ButtonBar;
         int m_scrollButtonBar_x = 0;

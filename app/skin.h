@@ -62,6 +62,8 @@ class Skin : public QObject
               bool    titleBarTextBold() { return m_titleBarTextBold; }
 
 
+        const QString tabBarScrollButtonsLayout() { return m_tabBarScrollButtonsLayout; }
+
         const QPoint& tabBarPosition() { return m_tabBarPosition; }
         const QColor& tabBarTextColor() { return m_tabBarTextColor; }
 
@@ -85,6 +87,12 @@ class Skin : public QObject
 
         const QPoint& tabBarCloseTabButtonPosition() { return m_tabBarCloseTabButtonPosition; }
         const QString tabBarCloseTabButtonStyleSheet() { return m_tabBarCloseTabButtonStyleSheet; }
+
+        const QPoint& tabBarLeftButtonPosition() { return m_tabBarLeftButtonPosition; }
+        const QString tabBarLeftButtonStyleSheet() { return m_tabBarLeftButtonStyleSheet; }
+
+        const QPoint& tabBarRightButtonPosition() { return m_tabBarRightButtonPosition; }
+        const QString tabBarRightButtonStyleSheet() { return m_tabBarRightButtonStyleSheet; }
 
 
     Q_SIGNALS:
@@ -122,6 +130,8 @@ class Skin : public QObject
         QColor m_titleBarTextColor;
         bool m_titleBarTextBold;
 
+        QString m_tabBarScrollButtonsLayout;
+
         QPoint m_tabBarPosition;
         QColor m_tabBarTextColor;
 
@@ -146,6 +156,12 @@ class Skin : public QObject
 
         QPoint m_tabBarCloseTabButtonPosition;
         QString m_tabBarCloseTabButtonStyleSheet;
+
+        QPoint m_tabBarLeftButtonPosition;
+        QString m_tabBarLeftButtonStyleSheet;
+
+        QPoint m_tabBarRightButtonPosition;
+        QString m_tabBarRightButtonStyleSheet;
 };
 
 #endif

@@ -102,6 +102,24 @@ TabBar::TabBar(MainWindow* mainWindow) : QWidget(mainWindow)
     connect(m_lineEdit, SIGNAL(editingFinished()), m_lineEdit, SLOT(hide()));
     connect(m_lineEdit, SIGNAL(returnPressed()), this, SLOT(interactiveRenameDone()));
 
+    m_selectNextTab = new QPushButton(this);
+    m_selectNextTab->setFocusPolicy(Qt::NoFocus);
+    m_selectNextTab->setToolTip(xi18nc("@info:tooltip", "Select Next Tab"));
+    m_selectNextTab->setWhatsThis(xi18nc("@info:whatsthis", "Selects the tab to the right of the current tab."));
+    m_selectNextTab->setAutoRepeat(true);
+    m_selectNextTab->setAutoRepeatDelay(1000);
+    m_selectNextTab->setAutoRepeatInterval(100);
+    connect(m_selectNextTab, SIGNAL(clicked()), this, SLOT(selectNextTab()));
+
+    m_selectPreviousTab = new QPushButton(this);
+    m_selectPreviousTab->setFocusPolicy(Qt::NoFocus);
+    m_selectPreviousTab->setToolTip(xi18nc("@info:tooltip", "Select Previous Tab"));
+    m_selectPreviousTab->setWhatsThis(xi18nc("@info:whatsthis", "Selects the tab to the left of the current tab."));
+    m_selectPreviousTab->setAutoRepeat(true);
+    m_selectPreviousTab->setAutoRepeatDelay(1000);
+    m_selectPreviousTab->setAutoRepeatInterval(100);
+    connect(m_selectPreviousTab, SIGNAL(clicked()), this, SLOT(selectPreviousTab()));
+
     setAcceptDrops(true);
 }
 
@@ -115,9 +133,22 @@ void TabBar::applySkin()
 
     m_newTabButton->setStyleSheet(m_skin->tabBarNewTabButtonStyleSheet());
     m_closeTabButton->setStyleSheet(m_skin->tabBarCloseTabButtonStyleSheet());
+    m_selectPreviousTab->setStyleSheet(m_skin->tabBarLeftButtonStyleSheet());
+    m_selectNextTab->setStyleSheet(m_skin->tabBarRightButtonStyleSheet());
 
-    m_newTabButton->move( m_skin->tabBarNewTabButtonPosition().x(), m_skin->tabBarNewTabButtonPosition().y());
+    m_newTabButton->move(m_skin->tabBarNewTabButtonPosition().x(), m_skin->tabBarNewTabButtonPosition().y());
     m_closeTabButton->move(width() - m_skin->tabBarCloseTabButtonPosition().x(), m_skin->tabBarCloseTabButtonPosition().y());
+
+    if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothLeft") {
+        m_selectPreviousTab->move(m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
+        m_selectNextTab->move(m_selectPreviousTab->x() + m_selectPreviousTab->width() + m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
+    } else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothRight") {
+        m_selectPreviousTab->move(width() - m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
+        m_selectNextTab->move(m_selectPreviousTab->x() + m_selectPreviousTab->width() + m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
+    } else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "leftRight") {
+        m_selectPreviousTab->move(m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
+        m_selectNextTab->move(width() - m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
+    }
 
     repaint();
 }
@@ -399,6 +430,17 @@ void TabBar::resizeEvent(QResizeEvent* event)
     m_newTabButton->move(m_skin->tabBarNewTabButtonPosition().x(), m_skin->tabBarNewTabButtonPosition().y());
     m_closeTabButton->move(width() - m_skin->tabBarCloseTabButtonPosition().x(), m_skin->tabBarCloseTabButtonPosition().y());
 
+    if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothLeft") {
+        m_selectPreviousTab->move(m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
+        m_selectNextTab->move(m_selectPreviousTab->x() + m_selectPreviousTab->width() + m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
+    } else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothRight") {
+        m_selectPreviousTab->move(width() - m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
+        m_selectNextTab->move(m_selectPreviousTab->x() + m_selectPreviousTab->width() + m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
+    } else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "leftRight") {
+        m_selectPreviousTab->move(m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
+        m_selectNextTab->move(width() - m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
+    }
+
     QWidget::resizeEvent(event);
 }
 
@@ -408,7 +450,19 @@ void TabBar::paintEvent(QPaintEvent*)
 
     const int x_start = m_skin->tabBarPosition().x();
     const int y_start = m_skin->tabBarPosition().y();
-    const int x_end   = m_closeTabButton->x();
+    const int x_end   = [&]{
+        int x_end = 0;
+
+        if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothLeft")
+            x_end = m_closeTabButton->x();
+        else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothRight")
+            x_end = std::min( {m_closeTabButton->x(), m_selectPreviousTab->x(), m_selectNextTab->x()} );
+        else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "leftRight")
+            x_end = std::min( {m_closeTabButton->x(), m_selectNextTab->x()} );
+
+        return x_end;
+    }();
+
     m_tabWidths.clear();
 
     QRect tabsClipRect(x_start, y_start, x_end - x_start, height() - y_start);
