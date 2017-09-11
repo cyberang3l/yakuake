@@ -35,6 +35,14 @@ install(FILES
     tabs/unselected_left.svg
     tabs/unselected_right.png
     tabs/unselected_right.svg
+    tabs/left_down.png
+    tabs/left_down.svg
+    tabs/left_up.png
+    tabs/left_up.svg
+    tabs/right_down.png
+    tabs/right_down.svg
+    tabs/right_up.png
+    tabs/right_up.svg
     DESTINATION ${DATA_INSTALL_DIR}/yakuake/skins/default/tabs)
 
 install(FILES

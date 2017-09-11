@@ -5,7 +5,7 @@ Email=kainz.a@gmail.com
 Icon=/icon.png
 
 [Tabs]
-x=22
+x=54
 y=0
 red=239
 green=240
@@ -20,6 +20,8 @@ unselected_right_corner=/tabs/selected_right.png
 prevent_closing_image=/tabs/lock.png
 prevent_closing_image_x=0
 prevent_closing_image_y=0
+# Accepted values for leftright_button_layout: bothLeft, bothRight, leftRight.
+leftright_button_layout=bothLeft
 
 [Background]
 back_image=/tabs/back_image.png
@@ -39,3 +41,17 @@ y=0
 up_image=/tabs/close_up.png
 over_image=/tabs/close_down.png
 down_image=/tabs/close_down.png
+
+[LeftButton]
+x=22
+y=0
+up_image=/tabs/left_up.png
+over_image=/tabs/left_down.png
+down_image=/tabs/left_down.png
+
+[RightButton]
+x=0
+y=0
+up_image=/tabs/right_up.png
+over_image=/tabs/right_down.png
+down_image=/tabs/right_down.png
