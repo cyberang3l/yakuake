@@ -628,7 +628,8 @@ int TabBar::tabAt(int x)
 {
     for (int index = 0; index < m_tabWidths.count(); ++index)
     {
-        if (x >  m_skin->tabBarPosition().x() && x < m_tabWidths.at(index))
+        if (x - m_scrollButtonBar_x > m_skin->tabBarPosition().x() &&
+            x - m_scrollButtonBar_x < m_tabWidths.at(index))
             return index;
     }
 
@@ -874,7 +875,7 @@ void TabBar::interactiveRename(int sessionId)
     int width = m_tabWidths.at(index) - x;
 
     m_lineEdit->setText(m_tabTitles[sessionId]);
-    m_lineEdit->setGeometry(x-1, y-1, width+3, height()+2);
+    m_lineEdit->setGeometry(m_scrollButtonBar_x + x-1, y-1, width+3, height()+2);
     m_lineEdit->selectAll();
     m_lineEdit->setFocus();
     m_lineEdit->show();
