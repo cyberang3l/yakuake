@@ -139,13 +139,13 @@ void TabBar::applySkin()
     m_newTabButton->move(m_skin->tabBarNewTabButtonPosition().x(), m_skin->tabBarNewTabButtonPosition().y());
     m_closeTabButton->move(width() - m_skin->tabBarCloseTabButtonPosition().x(), m_skin->tabBarCloseTabButtonPosition().y());
 
-    if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothLeft") {
+    if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("bothLeft")) {
         m_selectPreviousTab->move(m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
         m_selectNextTab->move(m_selectPreviousTab->x() + m_selectPreviousTab->width() + m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
-    } else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothRight") {
+    } else if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("bothRight")) {
         m_selectPreviousTab->move(width() - m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
         m_selectNextTab->move(m_selectPreviousTab->x() + m_selectPreviousTab->width() + m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
-    } else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "leftRight") {
+    } else if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("leftRight")) {
         m_selectPreviousTab->move(m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
         m_selectNextTab->move(width() - m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
     }
@@ -430,13 +430,13 @@ void TabBar::resizeEvent(QResizeEvent* event)
     m_newTabButton->move(m_skin->tabBarNewTabButtonPosition().x(), m_skin->tabBarNewTabButtonPosition().y());
     m_closeTabButton->move(width() - m_skin->tabBarCloseTabButtonPosition().x(), m_skin->tabBarCloseTabButtonPosition().y());
 
-    if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothLeft") {
+    if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("bothLeft")) {
         m_selectPreviousTab->move(m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
         m_selectNextTab->move(m_selectPreviousTab->x() + m_selectPreviousTab->width() + m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
-    } else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothRight") {
+    } else if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("bothRight")) {
         m_selectPreviousTab->move(width() - m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
         m_selectNextTab->move(m_selectPreviousTab->x() + m_selectPreviousTab->width() + m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
-    } else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "leftRight") {
+    } else if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("leftRight")) {
         m_selectPreviousTab->move(m_skin->tabBarLeftButtonPosition().x(), m_skin->tabBarLeftButtonPosition().y());
         m_selectNextTab->move(width() - m_skin->tabBarRightButtonPosition().x(), m_skin->tabBarRightButtonPosition().y());
     }
@@ -453,11 +453,11 @@ void TabBar::paintEvent(QPaintEvent*)
     const int x_end   = [&]{
         int x_end = 0;
 
-        if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothLeft")
+        if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("bothLeft"))
             x_end = m_closeTabButton->x();
-        else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "bothRight")
+        else if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("bothRight"))
             x_end = std::min( {m_closeTabButton->x(), m_selectPreviousTab->x(), m_selectNextTab->x()} );
-        else if (m_skin->tabBarScrollButtonsLayout().toStdString() == "leftRight")
+        else if (m_skin->tabBarScrollButtonsLayout() == QLatin1String("leftRight"))
             x_end = std::min( {m_closeTabButton->x(), m_selectNextTab->x()} );
 
         return x_end;

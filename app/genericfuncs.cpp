@@ -69,8 +69,7 @@ const QPixmap genHorizontallyTiledPixmap(const QPixmap& pixmap, uint repeatTimes
 const QPixmap appendPixmapToPixmapHorizontally(const QPixmap& pixmap1, const QPixmap& pixmap2)
 {
     QPixmap combinedPixmap(pixmap1.width() + pixmap2.width(),
-                           pixmap1.height() > pixmap2.height() ? pixmap1.height()
-                                                               : pixmap2.height());
+                           qMax(pixmap1.height(), pixmap2.height()));
     combinedPixmap.fill(Qt::transparent);
 
     QPainter painter(&combinedPixmap);
